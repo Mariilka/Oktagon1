@@ -1,0 +1,20 @@
+# Virtual Environment
+venv/
+.venv/
+ENV/
+env/
+
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*.class
+
+# Environment variables (например, для python-dotenv)
+.env
+
+# Database (локальные БД, если будут)
+*.sqlite3
+
+# IDE / Editor settings
+.vscode/
+.idea/
