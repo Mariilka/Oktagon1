@@ -1,35 +1,47 @@
-print("Hello, World!")
-from app.db import crud
-from app.db.db import SessionLocal
+from fastapi import FastAPI, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+# Импортируем роутеры из папки api
+from app.api import books, categories
+# Импортируем генератор сессий для проверки соединения
+from app.db.db import get_db
+
+app = FastAPI(
+    title="Book & Category API",
+    description="Финальная сборка приложения: управление книгами и категориями с валидацией бизнес-логики",
+    version="1.3.0"
+)
 
 
-def display_data():
-    db = SessionLocal()
+@app.get("/", tags=["Service"])
+def read_root():
+    """Корневой эндпоинт приветствия."""
+    return {"message": "Добро пожаловать в API каталога книг! Перейдите на /docs для работы с Swagger UI."}
+
+
+@app.get("/health", tags=["Service"])
+def health_check(db: Session = Depends(get_db)):
+    """
+    Эндпоинт для проверки жизнеспособности (Health Check).
+    Проверяет не только работу самого FastAPI, но и делает тестовый запрос в PostgreSQL.
+    """
     try:
-        print(" СПИСОК КАТЕГОРИЙ ")
-        categories = crud.get_categories(db)
-        for cat in categories:
-            print(f"ID: {cat.id} | Название: {cat.title}")
-
-        print("\n СПИСОК КНИГ ")
-        books = crud.get_books(db)
-        for book in books:
-            # Находим имя категории для наглядности вывода
-            cat_name = "Неизвестно"
-            for cat in categories:
-                if cat.id == book.category_id:
-                    cat_name = cat.title
-                    break
-
-            print(f"Книга: «{book.title}»")
-            print(f"  - Цена: {book.price} руб.")
-            print(f"  - Категория: {cat_name}")
-            print(f"  - Описание: {book.description or 'Нет описания'}")
-            print("-" * 30)
-
-    finally:
-        db.close()
+        # Выполняем легковесный сырой запрос для проверки коннекта с базой данных
+        db.execute(text("SELECT 1"))
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "message": "Сервис и база данных работают в штатном режиме"
+        }
+    except Exception as e:
+        # Если база данных лежит или не отвечает, возвращаем ошибку 500
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Сервис работает, но база данных недоступна: {str(e)}"
+        )
 
 
-if __name__ == "__main__":
-    display_data()
+
+app.include_router(categories.router)
+app.include_router(books.router)
