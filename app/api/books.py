@@ -26,7 +26,7 @@ def read_books(
         if not category:
             raise HTTPException(status_code=404, detail=f"Категория с ID {category_id} не существует")
         
-        return db.query(models.Book).filter(models.Book.category_id == category_id).offset(skip).limit(limit).all()
+        return crud.get_books_by_category(db, category_id=category_id, skip=skip, limit=limit)
         
     return crud.get_books(db, skip=skip, limit=limit)
 

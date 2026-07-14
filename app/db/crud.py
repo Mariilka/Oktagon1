@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from app.db import models
 
+
+
 def create_category(db: Session, title: str) -> models.Category:
     category = models.Category(title=title)
     db.add(category)
@@ -8,14 +10,11 @@ def create_category(db: Session, title: str) -> models.Category:
     db.refresh(category)
     return category
 
-
 def get_categories(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Category).offset(skip).limit(limit).all()
 
-
 def get_category_by_id(db: Session, category_id: int):
     return db.query(models.Category).filter(models.Category.id == category_id).first()
-
 
 def update_category(db: Session, category_id: int, new_title: str):
     category = get_category_by_id(db, category_id)
@@ -24,7 +23,6 @@ def update_category(db: Session, category_id: int, new_title: str):
         db.commit()
         db.refresh(category)
     return category
-
 
 def delete_category(db: Session, category_id: int) -> bool:
     category = get_category_by_id(db, category_id)
@@ -55,14 +53,15 @@ def create_book(
     db.refresh(book)
     return book
 
-
 def get_books(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Book).offset(skip).limit(limit).all()
-
 
 def get_book_by_id(db: Session, book_id: int):
     return db.query(models.Book).filter(models.Book.id == book_id).first()
 
+# ДОБАВЛЕНО: Функция для получения книг по категории
+def get_books_by_category(db: Session, category_id: int, skip: int = 0, limit: int = 100):
+    return db.query(models.Book).filter(models.Book.category_id == category_id).offset(skip).limit(limit).all()
 
 def update_book(db: Session, book_id: int, **kwargs):
     book = get_book_by_id(db, book_id)
